@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <regex>
 #include <map>
 #include <fstream>
@@ -157,16 +158,37 @@ void processReceived(FILE* fp)
   }
 }
 
+void processFile(const boost::filesystem::path& p)
+{
+  FILE* fp = fopen(p.c_str(), "r");
+  if(!fp) {
+    cerr<<"Could not open " << p.string() << " for reading"<<endl;
+    exit(EXIT_FAILURE);
+  }
+  processReceived(fp);
+  fclose(fp);
+}
+
+void processDir(const boost::filesystem::path& p)
+{
+  for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {}))
+    if (boost::filesystem::is_regular_file(entry))
+      processFile(entry);
+    else if (boost::filesystem::is_directory(entry))
+      processDir(entry);
+}
+
 int main(int argc, char**argv)
 {
   for(int n = 1 ; n < argc; ++n) {
-    FILE* fp = fopen(argv[n], "r");
-    if(!fp) {
-      cerr<<"Could not open " << argv[n] << " for reading"<<endl;
-      return EXIT_FAILURE;
+    boost::filesystem::path p(argv[n]);
+    if (boost::filesystem::exists(p)) {
+      if (boost::filesystem::is_regular_file(p))
+        processFile(p);
+      else if (boost::filesystem::is_directory(p)) {
+        processDir(p);
+      }
     }
-    processReceived(fp);
-    fclose(fp);
   }
   
   ofstream plot2("plot2.dot");
