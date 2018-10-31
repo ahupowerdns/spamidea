@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <regex>
 #include <map>
 #include <fstream>
@@ -16,7 +17,8 @@ static void chomp(char* p)
 string flattenDomain(const std::string& input, const vector<string>& repl)
 {
   for(const auto& r: repl) {
-    if(auto pos = input.find(r); pos != string::npos) {
+    auto pos = input.find(r);
+    if(pos != string::npos) {
       return "*."+r;
     }
   }
@@ -96,7 +98,8 @@ void processLine(std::string& l, MailTreeNode*& start)
 
 
   if(boost::starts_with(l, "Received: ")) {
-    if(auto pos = l.find(';'); pos != string::npos)
+    auto pos = l.find(';');
+    if(pos != string::npos)
       l.resize(pos);
     // Received: from server.ds9a.nl ([127.0.0.1]) by localhost (server.ds9a.nl [127.0.0.1]) (amavisd-new, port 10024) with ESMTP id CedExUADWeuK for <ahu@ds9a.nl>
 
@@ -155,16 +158,37 @@ void processReceived(FILE* fp)
   }
 }
 
+void processFile(const boost::filesystem::path& p)
+{
+  FILE* fp = fopen(p.c_str(), "r");
+  if(!fp) {
+    cerr<<"Could not open " << p.string() << " for reading"<<endl;
+    exit(EXIT_FAILURE);
+  }
+  processReceived(fp);
+  fclose(fp);
+}
+
+void processDir(const boost::filesystem::path& p)
+{
+  for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {}))
+    if (boost::filesystem::is_regular_file(entry))
+      processFile(entry);
+    else if (boost::filesystem::is_directory(entry))
+      processDir(entry);
+}
+
 int main(int argc, char**argv)
 {
   for(int n = 1 ; n < argc; ++n) {
-    FILE* fp = fopen(argv[n], "r");
-    if(!fp) {
-      cerr<<"Could not open " << argv[n] << " for reading"<<endl;
-      return EXIT_FAILURE;
+    boost::filesystem::path p(argv[n]);
+    if (boost::filesystem::exists(p)) {
+      if (boost::filesystem::is_regular_file(p))
+        processFile(p);
+      else if (boost::filesystem::is_directory(p)) {
+        processDir(p);
+      }
     }
-    processReceived(fp);
-    fclose(fp);
   }
   
   ofstream plot2("plot2.dot");

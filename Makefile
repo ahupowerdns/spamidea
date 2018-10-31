@@ -1,4 +1,4 @@
-CXXFLAGS:=-std=gnu++17 -Wall -O2 -MMD -MP -ggdb -Iext/simplesocket -Iext/catch -pthread
+CXXFLAGS:=-std=gnu++14 -Wall -O2 -MMD -MP -ggdb -Iext/simplesocket -Iext/catch -pthread
 
 PROGRAMS = getsender
 
@@ -14,7 +14,7 @@ check: testrunner tdns tdig
 -include *.d
 
 getsender: getsender.o
-	g++ -std=gnu++14 $^ -o $@ -pthread
+	g++ -std=gnu++14 $^ -o $@ -pthread -lboost_system -lboost_filesystem
 
 
 testrunner: tests.o record-types.o dns-storage.o dnsmessages.o 
