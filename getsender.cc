@@ -16,7 +16,8 @@ static void chomp(char* p)
 string flattenDomain(const std::string& input, const vector<string>& repl)
 {
   for(const auto& r: repl) {
-    if(auto pos = input.find(r); pos != string::npos) {
+    auto pos = input.find(r);
+    if(pos != string::npos) {
       return "*."+r;
     }
   }
@@ -96,7 +97,8 @@ void processLine(std::string& l, MailTreeNode*& start)
 
 
   if(boost::starts_with(l, "Received: ")) {
-    if(auto pos = l.find(';'); pos != string::npos)
+    auto pos = l.find(';');
+    if(pos != string::npos)
       l.resize(pos);
     // Received: from server.ds9a.nl ([127.0.0.1]) by localhost (server.ds9a.nl [127.0.0.1]) (amavisd-new, port 10024) with ESMTP id CedExUADWeuK for <ahu@ds9a.nl>
 

@@ -1,4 +1,4 @@
-CXXFLAGS:=-std=gnu++17 -Wall -O2 -MMD -MP -ggdb -Iext/simplesocket -Iext/catch -pthread
+CXXFLAGS:=-std=gnu++14 -Wall -O2 -MMD -MP -ggdb -Iext/simplesocket -Iext/catch -pthread
 
 PROGRAMS = getsender
 
